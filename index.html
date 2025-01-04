@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tetris Game</title>
+<style>
+body {margin: 0; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #000; color: #fff;}
+canvas {border: 2px solid #fff; background-color: #222;}
+#game-container {display: flex; align-items: flex-start;}
+#controls {display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; width: calc(300px + 140px);}
+#controls button, #restart {width: calc((300px + 140px) / 4 - 10px); height: calc((300px + 140px) / 4 - 10px); font-size: 24px; border: none; background-color: #333; color: #fff; border-radius: 8px; cursor: pointer;}
+#score {font-size: 20px; margin: 10px 0 20px;}
+#preview-container {margin-left: 20px; display: flex; flex-direction: column; align-items: center;}
+#game-over-message {margin: 20px 0; font-size: 24px; font-weight: bold; color: red; display: none;}
+#restart {margin-top: 10px; display: none; width: 120px;}
+</style>
+</head>
+<body>
+<h1>Tetris Game</h1>
+<div id="score">Score: 0 | Level: 1</div>
+<div id="game-over-message">Game Over</div>
+<div id="game-container">
+<canvas id="gameCanvas" width="300" height="600"></canvas>
+<div id="preview-container">
+<canvas id="previewCanvas" width="120" height="60"></canvas>
+<button id="restart">Restart</button>
+</div>
+</div>
+<div id="controls">
+<button id="left">←</button>
+<button id="down">↓</button>
+<button id="rotate">⤾</button>
+<button id="right">→</button>
+</div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const previewCanvas = document.getElementById('previewCanvas');
+const ctx = canvas.getContext('2d');
+const previewCtx = previewCanvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
+const gameOverMessage = document.getElementById('game-over-message');
+const restartButton = document.getElementById('restart');
+const COLS = 10;
+const ROWS = 20;
+const BLOCK_SIZE = canvas.width / COLS;
+const PREVIEW_BLOCK_SIZE = previewCanvas.width / 4;
+let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+const shapes = [
+  { shape: [[1, 1, 1], [0, 1, 0]], color: 'yellow' },
+  { shape: [[1, 1], [1, 1]], color: 'cyan' },
+  { shape: [[0, 1, 1], [1, 1, 0]], color: 'orange' },
+  { shape: [[1, 1, 0], [0, 1, 1]], color: 'green' },
+  { shape: [[1, 1, 1, 1]], color: 'blue' },
+  { shape: [[1, 1, 1], [1, 0, 0]], color: 'purple' },
+  { shape: [[1, 1, 1], [0, 0, 1]], color: 'red' }
+];
+let currentShape = { shape: [], row: 0, col: 4, color: '' };
+let nextShape = {};
+let score = 0;
+let level = 1;
+let dropInterval = 1000;
+let lastDropTime = 0;
+let spawnDelay = 0;
+let gameOver = false;
+let shapeLocked = false;
+let particles = [];
+
+function drawGrid() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      if (grid[row][col]) {
+        ctx.fillStyle = grid[row][col];
+        ctx.fillRect(col * BLOCK_SIZE, row * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(col * BLOCK_SIZE, row * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+      }
+    }
+  }
+  particles.forEach(particle => {
+    ctx.fillStyle = particle.color;
+    ctx.globalAlpha = particle.opacity;
+    ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+    ctx.globalAlpha = 1.0;
+  });
+}
+
+function drawShape(opacity = 1) {
+  ctx.globalAlpha = opacity;
+  ctx.fillStyle = currentShape.color;
+  currentShape.shape.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      if (cell) {
+        ctx.fillRect((currentShape.col + x) * BLOCK_SIZE, (currentShape.row + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect((currentShape.col + x) * BLOCK_SIZE, (currentShape.row + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+      }
+    });
+  });
+  ctx.globalAlpha = 1.0;
+}
+
+function drawGhost() {
+  if (shapeLocked) return;
+  const originalRow = currentShape.row;
+  while (!collision()) {
+    currentShape.row++;
+  }
+  currentShape.row--;
+  drawShape(0.5); // Draw ghost shape with 50% opacity
+  currentShape.row = originalRow;
+}
+
+function drawPreview() {
+  previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+  previewCtx.fillStyle = nextShape.color;
+  nextShape.shape.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      if (cell) {
+        previewCtx.fillRect(x * PREVIEW_BLOCK_SIZE, y * PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE);
+        previewCtx.strokeStyle = 'black';
+        previewCtx.strokeRect(x * PREVIEW_BLOCK_SIZE, y * PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE);
+      }
+    });
+  });
+}
+
+function spawnShape() {
+  if (gameOver) return;
+  currentShape = { ...nextShape, row: 0, col: Math.floor(COLS / 2) - Math.floor(nextShape.shape[0].length / 2) };
+  nextShape = shapes[Math.floor(Math.random() * shapes.length)];
+  drawPreview();
+  if (collision()) {
+    gameOver = true;
+    gameOverMessage.style.display = 'block';
+    restartButton.style.display = 'block';
+    return;
+  }
+  shapeLocked = false;
+}
+
+function moveShape(dx, dy) {
+  if (gameOver) return;
+  currentShape.col += dx;
+  currentShape.row += dy;
+  if (collision()) {
+    currentShape.col -= dx;
+    currentShape.row -= dy;
+    if (dy === 1) {
+      lockShape();
+      spawnDelay = dropInterval;
+    }
+  }
+}
+
+function rotateShape() {
+  if (gameOver) return;
+  const originalShape = currentShape.shape.map(row => [...row]);
+  currentShape.shape = currentShape.shape[0].map((val, index) => currentShape.shape.map(row => row[index]).reverse());
+  if (collision()) {
+    currentShape.shape = originalShape;
+  }
+}
+
+function collision() {
+  for (let y = 0; y < currentShape.shape.length; y++) {
+    for (let x = 0; x < currentShape.shape[y].length; x++) {
+      if (currentShape.shape[y][x] && (grid[currentShape.row + y] === undefined || grid[currentShape.row + y][currentShape.col + x] === undefined || grid[currentShape.row + y][currentShape.col + x])) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function lockShape() {
+  shapeLocked = true;
+  drawShape(1); // Ensure full opacity when locking shape
+  currentShape.shape.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      if (cell) {
+        grid[currentShape.row + y][currentShape.col + x] = currentShape.color;
+      }
+    });
+  });
+  clearLines();
+}
+
+function clearLines() {
+  let linesCleared = 0;
+  for (let row = ROWS - 1; row >= 0; row--) {
+    if (grid[row].every(cell => cell)) {
+      createClearParticles(row);
+      grid.splice(row, 1);
+      grid.unshift(Array(COLS).fill(0));
+      linesCleared++;
+      row++;
+    }
+  }
+  score += linesCleared * 100;
+  if (linesCleared > 0) {
+    if (score % 500 === 0) {
+      level++;
+      dropInterval = Math.max(100, dropInterval - 100);
+    }
+  }
+}
+
+function createClearParticles(row) {
+  for (let col = 0; col < COLS; col++) {
+    for (let i = 0; i < 2; i++) {
+      particles.push({
+        x: col * BLOCK_SIZE,
+        y: row * BLOCK_SIZE,
+        size: BLOCK_SIZE / 2,
+        color: grid[row][col],
+        opacity: 1,
+        dx: (Math.random() - 0.5) * 6,
+        dy: (Math.random() - 0.5) * 6
+      });
+    }
+  }
+}
+
+function updateParticles() {
+  particles.forEach((particle, index) => {
+    particle.x += particle.dx;
+    particle.y += particle.dy;
+    particle.opacity -= 0.01;
+    if (particle.opacity <= 0) {
+      particles.splice(index, 1);
+    }
+  });
+}
+
+function resetGame() {
+  gameOver = false;
+  gameOverMessage.style.display = 'none';
+  restartButton.style.display = 'none';
+  grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+  score = 0;
+  level = 1;
+  dropInterval = 1000;
+  nextShape = shapes[Math.floor(Math.random() * shapes.length)];
+  spawnShape();
+  lastDropTime = 0;
+  particles = [];
+  requestAnimationFrame(gameLoop);
+}
+
+function updateScore() {
+  scoreDisplay.textContent = `Score: ${score} | Level: ${level}`;
+}
+
+function gameLoop(timestamp) {
+  if (gameOver) return;
+  if (!lastDropTime) lastDropTime = timestamp;
+  const deltaTime = timestamp - lastDropTime;
+  if (spawnDelay > 0) {
+    if (spawnDelay - deltaTime <= 0){
+      spawnShape();
+      spawnDelay = 0;
+    }
+  } else if (deltaTime > dropInterval) {
+    moveShape(0, 1);
+    lastDropTime = timestamp;
+  }
+  drawGrid();
+  drawGhost();
+  drawShape();
+  updateParticles();
+  updateScore();
+  requestAnimationFrame(gameLoop);
+}
+
+restartButton.addEventListener('click', resetGame);
+document.getElementById('left').addEventListener('click', () => moveShape(-1, 0));
+document.getElementById('right').addEventListener('click', () => moveShape(1, 0));
+document.getElementById('down').addEventListener('click', () => moveShape(0, 1));
+document.getElementById('rotate').addEventListener('click', rotateShape);
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'ArrowLeft') moveShape(-1, 0);
+  if (event.key === 'ArrowRight') moveShape(1, 0);
+  if (event.key === 'ArrowDown') moveShape(0, 1);
+  if (event.key === 'ArrowUp') rotateShape();
+});
+
+resetGame();
+</script>
+</body>
+</html>
