@@ -517,26 +517,32 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const moveX = Math.floor(deltaX / sensitivity);
     const moveY = Math.floor(deltaY / sensitivity);
 
-    // Only move the block if the movement distance is significant
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        // Horizontal swipe (left or right)
-        if (deltaX < 0 && lastMoveX !== moveX) {
-            // Left swipe - Move left
-            moveShape(-moveX, 0);
-            lastMoveX = moveX;
-        } else if (deltaX > 0 && lastMoveX !== moveX) {
-            // Right swipe - Move right
-            moveShape(moveX, 0);
-            lastMoveX = moveX;
-        }
-    } else {
-        // Vertical swipe (up or down)
-        if (deltaY > 0 && lastMoveY !== moveY) {
-            // Down swipe - Move down
-            moveShape(0, moveY);
-            lastMoveY = moveY;
-        }
+
+    // Horizontal swipe (left or right)
+    if (deltaX < 0) {
+        // Left swipe - Move left
+        moveShape(moveX, 0);
+        lastMoveX = moveX;
+        startX = endX;
+    } else if (deltaX > 0 ) {
+        // Right swipe - Move right
+        moveShape(moveX, 0);
+        lastMoveX = moveX;
+        startX = endX;
     }
+    // Vertical swipe (up or down)
+    if (deltaY > 0) {
+        // Down swipe - Move down
+        moveShape(0, moveY);
+        startY = endY;
+        lastMoveY = moveY;
+    } else if(deltaY < 0){
+      for (let i = 0; i < moveY; i++) {
+        rotateShape();
+      } 
+      startY = endY;
+    }
+    
 });
 
 // Detect swipe end
