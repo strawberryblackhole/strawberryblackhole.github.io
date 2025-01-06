@@ -44,6 +44,7 @@ canvas {
   cursor: pointer;
   aspect-ratio: 1 / 1;
   width: 100%;
+  user-select: none; 
 }
 #score {
   font-size: 20px;
@@ -346,12 +347,20 @@ function updateScore() {
 }
 
 const keysPressed = {};
+const keysPressedTouch = {};
 const keyLastAction = {};
 const KEY_DELAYS = {
     ArrowLeft: 100, // Delay in milliseconds for left movement
     ArrowRight: 100, // Delay in milliseconds for right movement
     ArrowDown: 50, // Delay in milliseconds for down movement
     ArrowUp: 150, // Delay in milliseconds for rotation
+};
+
+const KEY_DELAYS_TOUCH = {
+    ArrowLeft: 150, // Delay in milliseconds for left movement
+    ArrowRight: 150, // Delay in milliseconds for right movement
+    ArrowDown: 100, // Delay in milliseconds for down movement
+    ArrowUp: 200, // Delay in milliseconds for rotation
 };
 
 document.addEventListener('keydown', (event) => {
@@ -364,7 +373,19 @@ document.addEventListener('keyup', (event) => {
 
 function handleKeyPress(timestamp) {
     Object.keys(keysPressed).forEach((key) => {
-        if (keysPressed[key]) {
+      if (keysPressed[key]) {
+            // Check if the key has a delay defined and enough time has passed
+            if (!keyLastAction[key] || timestamp - keyLastAction[key] >= (KEY_DELAYS[key] || 0)) {
+                if (key === 'ArrowLeft') moveShape(-1, 0);
+                if (key === 'ArrowRight') moveShape(1, 0);
+                if (key === 'ArrowDown') moveShape(0, 1);
+                if (key === 'ArrowUp') rotateShape();
+
+                // Update the last action time for the key
+                keyLastAction[key] = timestamp;
+            }
+        }
+        if (keysPressedTouch[key]) {
             // Check if the key has a delay defined and enough time has passed
             if (!keyLastAction[key] || timestamp - keyLastAction[key] >= (KEY_DELAYS[key] || 0)) {
                 if (key === 'ArrowLeft') moveShape(-1, 0);
@@ -430,14 +451,14 @@ function setupButtonListeners() {
 
         // Add touch event listeners
         buttonElement.addEventListener('touchstart', () => {
-            keysPressed[buttonKey] = true;
+          keysPressedTouch[buttonKey] = true;
         });
 
         buttonElement.addEventListener('touchend', () => {
-            keysPressed[buttonKey] = false;
+          keysPressedTouch[buttonKey] = false;
         });
         buttonElement.addEventListener('touchcancel', () => {
-            keysPressed[buttonKey] = false; // Stop action if touch is canceled
+          keysPressedTouch[buttonKey] = false; // Stop action if touch is canceled
         });
     });
 }
@@ -453,6 +474,80 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('keyup', (event) => {
     keysPressed[event.key] = false;
 });
+
+
+
+
+
+
+let startX = 0;
+let startY = 0;
+let isSwiping = false;
+let lastMoveX = 0;
+let lastMoveY = 0;
+
+const gameCanvas = document.getElementById('gameCanvas');
+
+// Detect swipe start
+gameCanvas.addEventListener('touchstart', (event) => {
+    const touch = event.touches[0];
+    startX = touch.pageX;
+    startY = touch.pageY;
+    lastMoveX = 0; // Reset movement from last swipe
+    lastMoveY = 0; 
+    isSwiping = true;
+});
+
+// Detect swipe move (real-time updates)
+gameCanvas.addEventListener('touchmove', (event) => {
+    if (!isSwiping) return;
+    event.preventDefault(); // Prevent default touch behavior (scrolling, zooming)
+
+    const touch = event.touches[0];
+    const endX = touch.pageX;
+    const endY = touch.pageY;
+
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+
+    // Set swipe sensitivity for movement (how far should the finger move to make the block move one step)
+    const sensitivity = 20; // Adjust this value for your preferred sensitivity (higher value = less movement)
+
+    // Calculate how many steps to move in the x or y direction
+    const moveX = Math.floor(deltaX / sensitivity);
+    const moveY = Math.floor(deltaY / sensitivity);
+
+    // Only move the block if the movement distance is significant
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Horizontal swipe (left or right)
+        if (deltaX < 0 && lastMoveX !== moveX) {
+            // Left swipe - Move left
+            moveShape(-moveX, 0);
+            lastMoveX = moveX;
+        } else if (deltaX > 0 && lastMoveX !== moveX) {
+            // Right swipe - Move right
+            moveShape(moveX, 0);
+            lastMoveX = moveX;
+        }
+    } else {
+        // Vertical swipe (up or down)
+        if (deltaY > 0 && lastMoveY !== moveY) {
+            // Down swipe - Move down
+            moveShape(0, moveY);
+            lastMoveY = moveY;
+        }
+    }
+});
+
+// Detect swipe end
+gameCanvas.addEventListener('touchend', (event) => {
+    if (!isSwiping) return;
+    isSwiping = false; // End the swipe tracking
+});
+
+
+
+
 
 resetGame();
 </script>
