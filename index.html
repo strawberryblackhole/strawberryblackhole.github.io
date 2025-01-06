@@ -523,24 +523,20 @@ gameCanvas.addEventListener('touchmove', (event) => {
         // Left swipe - Move left
         moveShape(moveX, 0);
         lastMoveX = moveX;
-        startX = endX;
     } else if (deltaX > 0 ) {
         // Right swipe - Move right
         moveShape(moveX, 0);
         lastMoveX = moveX;
-        startX = endX;
     }
     // Vertical swipe (up or down)
     if (deltaY > 0) {
         // Down swipe - Move down
         moveShape(0, moveY);
-        startY = endY;
         lastMoveY = moveY;
     } else if(deltaY < 0){
       for (let i = 0; i < moveY; i++) {
         rotateShape();
       } 
-      startY = endY;
     }
     
 });
