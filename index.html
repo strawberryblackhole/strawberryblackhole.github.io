@@ -497,8 +497,8 @@ function drawSwipes() {
         ctx.font = '16px Arial';
         ctx.fillText(`ΔX: ${swipe.deltaX}`, swipe.endX + 10, swipe.endY - 10);
         ctx.fillText(`ΔY: ${swipe.deltaY}`, swipe.endX + 10, swipe.endY + 10);
-        ctx.fillText(`mX: ${swipe.moveX}`, swipe.endX + 30, swipe.endY + 10);
-        ctx.fillText(`mY: ${swipe.moveY}`, swipe.endX + 30, swipe.endY + 10);
+        ctx.fillText(`mX: ${swipe.moveX}`, swipe.endX + 10, swipe.endY + 30);
+        ctx.fillText(`mY: ${swipe.moveY}`, swipe.endX + 10, swipe.endY + 50);
 
         // Draw start point
         ctx.fillStyle = 'green';
