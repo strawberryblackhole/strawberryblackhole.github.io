@@ -475,6 +475,48 @@ document.addEventListener('keyup', (event) => {
     keysPressed[event.key] = false;
 });
 
+
+const debugCanvas = document.createElement('canvas');
+debugCanvas.width = gameCanvas.width;
+debugCanvas.height = gameCanvas.height;
+debugCanvas.style.position = 'absolute';
+debugCanvas.style.top = gameCanvas.offsetTop + 'px';
+debugCanvas.style.left = gameCanvas.offsetLeft + 'px';
+debugCanvas.style.pointerEvents = 'none'; // Allow touches to pass through
+document.body.appendChild(debugCanvas);
+
+const debugCtx = debugCanvas.getContext('2d');
+
+function drawDebug(startX, startY, endX, endY, deltaX, deltaY) {
+    debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height); // Clear the previous visuals
+
+    // Draw swipe line
+    debugCtx.strokeStyle = 'red';
+    debugCtx.lineWidth = 2;
+    debugCtx.beginPath();
+    debugCtx.moveTo(startX, startY);
+    debugCtx.lineTo(endX, endY);
+    debugCtx.stroke();
+
+    // Draw text for swipe components
+    debugCtx.fillStyle = 'blue';
+    debugCtx.font = '16px Arial';
+    debugCtx.fillText(`ΔX: ${deltaX}`, endX + 10, endY - 10);
+    debugCtx.fillText(`ΔY: ${deltaY}`, endX + 10, endY + 10);
+
+    // Draw start point
+    debugCtx.fillStyle = 'green';
+    debugCtx.beginPath();
+    debugCtx.arc(startX, startY, 5, 0, Math.PI * 2);
+    debugCtx.fill();
+
+    // Draw end point
+    debugCtx.fillStyle = 'red';
+    debugCtx.beginPath();
+    debugCtx.arc(endX, endY, 5, 0, Math.PI * 2);
+    debugCtx.fill();
+}
+
 let startX = 0;
 let startY = 0;
 let isSwipingHorizontal = false;
