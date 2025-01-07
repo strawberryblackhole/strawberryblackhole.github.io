@@ -517,22 +517,22 @@ gameCanvas.addEventListener('touchmove', (event) => {
       // Horizontal swipe (left or right)
       if (moveX < 0) {
           moveShape(moveX, 0);
-          startX += moveX * sensitivity;
-          startY += moveY * sensitivity;
+          startX = endX;
+          startY = endY;
       } else if (moveX > 0 ) {
           moveShape(moveX, 0);
-          startX += moveX * sensitivity;
-          startY += moveY * sensitivity;
+          startX = endX;
+          startY = endY;
       }
     } else {
       if (moveY > 0) {
           moveShape(0, moveY);
-          startY += moveY * sensitivity;
-          startX += moveX * sensitivity;
+          startX = endX;
+          startY = endY;
       } else if(Math.floor(moveY/4) < 0){
         rotateShape();
-        startY += moveY * sensitivity;
-        startX += moveX * sensitivity;
+          startX = endX;
+          startY = endY;
       }
     }
     
