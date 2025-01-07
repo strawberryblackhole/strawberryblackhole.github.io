@@ -560,8 +560,8 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const moveX = Math.floor(deltaX / sensitivity);
     const moveY = Math.floor(deltaY / sensitivity);
 
-        // Update the last swipe object in the array
-        const lastSwipe = swipes[swipes.length - 1];
+    // Update the last swipe object in the array
+    const lastSwipe = swipes[swipes.length - 1];
     lastSwipe.endX = endX;
     lastSwipe.endY = endY;
     lastSwipe.moveX = moveX;
@@ -571,7 +571,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
 
     if (!isSwipingHorizontal && !isSwipingVertical) {
         // Determine the swipe direction on the first significant movement
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX > 20)) {
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20) {
             isSwipingHorizontal = true;
             lastSwipe.horizontal = true;
         } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY > 20)){
@@ -583,6 +583,17 @@ gameCanvas.addEventListener('touchmove', (event) => {
         // Horizontal swipe (left or right)
         moveShape(moveX, 0); // Move by the difference since the last move
         startX += (moveX * sensitivity); // Adjust the start point
+    }
+
+    if (isSwipingVertical && moveY > 0) {
+        // Horizontal swipe (left or right)
+        moveShape(0, moveY); // Move by the difference since the last move
+        startY += (moveY * sensitivity); // Adjust the start point
+    }
+    if (isSwipingVertical && moveY/4 < 0) {
+        // Horizontal swipe (left or right)
+        rotateShape(); // Move by the difference since the last move
+        startY += (moveY * sensitivity); // Adjust the start point
     }
 
 });
