@@ -515,11 +515,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
 
     if(deltaX > deltaY){
       // Horizontal swipe (left or right)
-      if (moveX < 0) {
-          moveShape(moveX, 0);
-          startX = endX;
-          startY = endY;
-      } else if (moveX > 0 ) {
+      if (moveX != 0) {
           moveShape(moveX, 0);
           startX = endX;
           startY = endY;
