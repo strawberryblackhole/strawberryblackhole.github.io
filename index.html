@@ -571,10 +571,9 @@ gameCanvas.addEventListener('touchmove', (event) => {
 
     if (!isSwipingHorizontal && !isSwipingVertical) {
         // Determine the swipe direction on the first significant movement
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20) {
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > sensitivity) {
             isSwipingHorizontal = true;
-            lastSwipe.horizontal = true;
-        } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY > 20)){
+        } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY) > sensitivity){
             isSwipingVertical = true;
         }
     }
