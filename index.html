@@ -493,9 +493,12 @@ function drawSwipes() {
 
         // Draw text for swipe components
         ctx.fillStyle = 'blue';
+        if(swipe.horizontal) ctx.fillStyle = 'red';
         ctx.font = '16px Arial';
         ctx.fillText(`ΔX: ${swipe.deltaX}`, swipe.endX + 10, swipe.endY - 10);
         ctx.fillText(`ΔY: ${swipe.deltaY}`, swipe.endX + 10, swipe.endY + 10);
+        ctx.fillText(`mX: ${swipe.moveX}`, swipe.endX + 30, swipe.endY + 10);
+        ctx.fillText(`mY: ${swipe.moveY}`, swipe.endX + 30, swipe.endY + 10);
 
         // Draw start point
         ctx.fillStyle = 'green';
@@ -531,8 +534,11 @@ gameCanvas.addEventListener('touchstart', (event) => {
         startY,
         endX: startX,
         endY: startY,
+        moveX: 0,
+        moveY: 0,
         deltaX: 0,
-        deltaY: 0
+        deltaY: 0,
+        horizontal:false,
     });
 });
 
@@ -558,6 +564,8 @@ gameCanvas.addEventListener('touchmove', (event) => {
         const lastSwipe = swipes[swipes.length - 1];
     lastSwipe.endX = endX;
     lastSwipe.endY = endY;
+    lastSwipe.moveX = moveX;
+    lastSwipe.moveY = moveY;
     lastSwipe.deltaX = deltaX;
     lastSwipe.deltaY = deltaY;
 
@@ -565,6 +573,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
         // Determine the swipe direction on the first significant movement
         if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX > 20)) {
             isSwipingHorizontal = true;
+            lastSwipe.horizontal = true;
         } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY > 20)){
             isSwipingVertical = true;
         }
