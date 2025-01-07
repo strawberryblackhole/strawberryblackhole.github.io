@@ -493,6 +493,8 @@ gameCanvas.addEventListener('touchstart', (event) => {
     const touch = event.touches[0];
     startX = touch.pageX;
     startY = touch.pageY;
+    lastMoveX = 0; // Reset movement from last swipe
+    lastMoveY = 0; 
     isSwiping = true;
 });
 
@@ -508,30 +510,33 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const deltaX = endX - startX;
     const deltaY = endY - startY;
 
-    const sensitivity = 30; // Adjust this value for your preferred sensitivity (higher value = less movement)
+    // Set swipe sensitivity for movement (how far should the finger move to make the block move one step)
+    const sensitivity = 20; // Adjust this value for your preferred sensitivity (higher value = less movement)
 
+    // Calculate how many steps to move in the x or y direction
     const moveX = Math.floor(deltaX / sensitivity);
     const moveY = Math.floor(deltaY / sensitivity);
 
-    if(deltaX > deltaY){
-      // Horizontal swipe (left or right)
-      if (moveX != 0) {
-          moveShape(moveX, 0);
-          startX = endX;
-          startY = endY;
-      }
+    // Only move the block if the movement distance is significant
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Horizontal swipe (left or right)
+        if (deltaX < 0 && lastMoveX !== moveX) {
+            // Left swipe - Move left
+            moveShape(-moveX, 0);
+            lastMoveX = moveX;
+        } else if (deltaX > 0 && lastMoveX !== moveX) {
+            // Right swipe - Move right
+            moveShape(moveX, 0);
+            lastMoveX = moveX;
+        }
     } else {
-      if (moveY > 0) {
-          moveShape(0, moveY);
-          startX = endX;
-          startY = endY;
-      } else if(Math.floor(moveY/4) < 0){
-        rotateShape();
-          startX = endX;
-          startY = endY;
-      }
+        // Vertical swipe (up or down)
+        if (deltaY > 0 && lastMoveY !== moveY) {
+            // Down swipe - Move down
+            moveShape(0, moveY);
+            lastMoveY = moveY;
+        }
     }
-    
 });
 
 // Detect swipe end
