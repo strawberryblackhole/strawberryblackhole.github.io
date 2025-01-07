@@ -475,8 +475,6 @@ document.addEventListener('keyup', (event) => {
     keysPressed[event.key] = false;
 });
 
-
-
 let startX = 0;
 let startY = 0;
 let isSwipingHorizontal = false;
@@ -524,23 +522,21 @@ gameCanvas.addEventListener('touchmove', (event) => {
         }
     }
 
-    if (isSwipingHorizontal) {
+    if (isSwipingHorizontal && moveX !== lastMoveX) {
         // Horizontal swipe (left or right)
-        if (deltaX !== 0 && lastMoveX !== moveX) {
-            moveShape(moveX, 0); 
-            lastMoveX = moveX;
-        }
+        moveShape(moveX - lastMoveX, 0); // Move by the difference since the last move
+        lastMoveX = moveX;
+        startX += (moveX * sensitivity); // Adjust the start point
     }
 
-    if (isSwipingVertical) {
-        // Vertical swipe (up or down)
-        if (deltaY > 0 && lastMoveY !== moveY) {
-            moveShape(0, moveY); // Move down
-            lastMoveY = moveY;
-        } else if (deltaY < 0 && lastMoveY !== moveY) {
+    if (isSwipingVertical && moveY !== lastMoveY) {
+        if (moveY > lastMoveY) {
+            moveShape(0, moveY - lastMoveY); // Move down
+        } else if (moveY < lastMoveY) {
             rotateShape(); // Rotate on upward swipe
-            lastMoveY = moveY;
         }
+        lastMoveY = moveY;
+        startY += (moveY * sensitivity); // Adjust the start point
     }
 });
 
