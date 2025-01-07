@@ -493,8 +493,6 @@ gameCanvas.addEventListener('touchstart', (event) => {
     const touch = event.touches[0];
     startX = touch.pageX;
     startY = touch.pageY;
-    lastMoveX = 0; // Reset movement from last swipe
-    lastMoveY = 0; 
     isSwiping = true;
 });
 
@@ -517,22 +515,31 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const moveX = Math.floor(deltaX / sensitivity);
     const moveY = Math.floor(deltaY / sensitivity);
 
+    
+    // Move the shape only if there's a step to move
+    if (moveX !== 0) {
+        moveShape(moveX, 0);
+        startX += moveX * sensitivity; // Update the starting X position
+    }
+
+    if (moveY !== 0) {
+        moveShape(0, moveY);
+        startY += moveY * sensitivity; // Update the starting Y position
+    }
+
 
     // Horizontal swipe (left or right)
     if (deltaX < 0) {
         // Left swipe - Move left
         moveShape(moveX, 0);
-        lastMoveX = moveX;
     } else if (deltaX > 0 ) {
         // Right swipe - Move right
         moveShape(moveX, 0);
-        lastMoveX = moveX;
     }
     // Vertical swipe (up or down)
     if (deltaY > 0) {
         // Down swipe - Move down
         moveShape(0, moveY);
-        lastMoveY = moveY;
     } else if(deltaY < 0){
       for (let i = 0; i < moveY; i++) {
         rotateShape();
