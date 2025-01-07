@@ -508,7 +508,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const deltaX = endX - startX;
     const deltaY = endY - startY;
 
-    const sensitivity = 20; // Adjust this value for your preferred sensitivity (higher value = less movement)
+    const sensitivity = 30; // Adjust this value for your preferred sensitivity (higher value = less movement)
 
     const moveX = Math.floor(deltaX / sensitivity);
     const moveY = Math.floor(deltaY / sensitivity);
@@ -525,9 +525,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
         moveShape(0, moveY);
         startY += moveY * sensitivity;
     } else if(moveY < 0){
-      for (let i = 0; i < moveY; i++) {
-        rotateShape();
-      } 
+      rotateShape();
       startY += moveY * sensitivity;
     }
     
