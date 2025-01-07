@@ -476,12 +476,13 @@ document.addEventListener('keyup', (event) => {
 });
 
 
+const gameCanvass = document.getElementById('gameCanvas');
 const debugCanvas = document.createElement('canvas');
-debugCanvas.width = gameCanvas.width;
-debugCanvas.height = gameCanvas.height;
+debugCanvas.width = gameCanvass.width;
+debugCanvas.height = gameCanvass.height;
 debugCanvas.style.position = 'absolute';
-debugCanvas.style.top = gameCanvas.offsetTop + 'px';
-debugCanvas.style.left = gameCanvas.offsetLeft + 'px';
+debugCanvas.style.top = gameCanvass.offsetTop + 'px';
+debugCanvas.style.left = gameCanvass.offsetLeft + 'px';
 debugCanvas.style.pointerEvents = 'none'; // Allow touches to pass through
 document.body.appendChild(debugCanvas);
 
