@@ -26,7 +26,7 @@ canvas {
   align-items: flex-start;
   flex-direction: row-reverse;
 }
-#controls {
+/* #controls {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
@@ -34,8 +34,8 @@ canvas {
   width: 440px; /* Matches the width of the game canvas */
   justify-content: center;
   order: 3;
-}
-#controls button, #restart {
+} */
+#restart {
   font-size: 24px;
   border: none;
   background-color: #333;
@@ -81,9 +81,9 @@ canvas {
     margin-bottom: 10px;
     margin-left: 0;
   }
-  #controls {
+  /* #controls {
     width: 90%;
-  }
+  } */
   #restart {
     margin-bottom: 10px; /* Adds space between the button and the canvas */
     height: 50px;
@@ -109,13 +109,14 @@ canvas {
   </div>
   <canvas id="gameCanvas" width="300" height="600"></canvas>
 </div>
+<!--
 <div id="controls">
   <button id="left">←</button>
   <button id="down">↓</button>
   <button id="rotate">⤾</button>
   <button id="right">→</button>
 </div>
-
+-->
 
 <script>
 const canvas = document.getElementById('gameCanvas');
@@ -353,7 +354,7 @@ const KEY_DELAYS = {
     ArrowLeft: 100, // Delay in milliseconds for left movement
     ArrowRight: 100, // Delay in milliseconds for right movement
     ArrowDown: 50, // Delay in milliseconds for down movement
-    ArrowUp: 150, // Delay in milliseconds for rotation
+    ArrowUp: 200, // Delay in milliseconds for rotation
 };
 
 const KEY_DELAYS_TOUCH = {
@@ -387,7 +388,7 @@ function handleKeyPress(timestamp) {
         }
         if (keysPressedTouch[key]) {
             // Check if the key has a delay defined and enough time has passed
-            if (!keyLastAction[key] || timestamp - keyLastAction[key] >= (KEY_DELAYS[key] || 0)) {
+            if (!keyLastAction[key] || timestamp - keyLastAction[key] >= (KEY_DELAYS_TOUCH[key] || 0)) {
                 if (key === 'ArrowLeft') moveShape(-1, 0);
                 if (key === 'ArrowRight') moveShape(1, 0);
                 if (key === 'ArrowDown') moveShape(0, 1);
@@ -463,8 +464,7 @@ function setupButtonListeners() {
     });
 }
 
-// Call this once during initialization
-setupButtonListeners();
+// setupButtonListeners();
 
 
 document.addEventListener('keydown', (event) => {
@@ -524,7 +524,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
     if (moveY > 0) {
         moveShape(0, moveY);
         startY += moveY * sensitivity;
-    } else if(moveY < 0){
+    } else if(Math.floor(moveY/2) < 0){
       rotateShape();
       startY += moveY * sensitivity;
     }
