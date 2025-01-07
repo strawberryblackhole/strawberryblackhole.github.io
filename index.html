@@ -524,7 +524,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
     if (moveY > 0) {
         moveShape(0, moveY);
         startY += moveY * sensitivity;
-    } else if(Math.floor(moveY/2) < 0){
+    } else if(Math.floor(moveY/4) < 0){
       rotateShape();
       startY += moveY * sensitivity;
     }
