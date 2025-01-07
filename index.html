@@ -25,13 +25,14 @@ canvas {
   display: flex;
   align-items: flex-start;
   flex-direction: row-reverse;
+  margin-bottom: 20px;
 }
 /* #controls {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   margin-top: 10px;
-  width: 440px; /* Matches the width of the game canvas */
+  width: 440px;
   justify-content: center;
   order: 3;
 } */
@@ -100,6 +101,9 @@ canvas {
 </head>
 <body>
 <h1>Tetris Game</h1>
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/4LrISEpfFRdRS2bZkQ1CuO?utm_source=generator" width="300" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+
 <div id="score">Score: 0 | Level: 1</div>
 <div id="game-over-message">Game Over</div>
 <div id="game-container">
@@ -419,7 +423,7 @@ function gameLoop(timestamp) {
   drawGhost();
   drawShape();
   updateParticles();
-  drawSwipes();
+  // drawSwipes();
   updateScore();
   requestAnimationFrame(gameLoop);
 }
@@ -529,17 +533,17 @@ gameCanvas.addEventListener('touchstart', (event) => {
     isSwipingHorizontal = false; // Reset swipe direction
     isSwipingVertical = false;
 
-    swipes.push({
-        startX,
-        startY,
-        endX: startX,
-        endY: startY,
-        moveX: 0,
-        moveY: 0,
-        deltaX: 0,
-        deltaY: 0,
-        horizontal:false,
-    });
+    // swipes.push({
+    //     startX,
+    //     startY,
+    //     endX: startX,
+    //     endY: startY,
+    //     moveX: 0,
+    //     moveY: 0,
+    //     deltaX: 0,
+    //     deltaY: 0,
+    //     horizontal:false,
+    // });
 });
 
 // Detect swipe move (real-time updates)
@@ -560,14 +564,14 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const moveX = Math.floor(deltaX / sensitivity);
     const moveY = Math.floor(deltaY / sensitivity);
 
-    // Update the last swipe object in the array
-    const lastSwipe = swipes[swipes.length - 1];
-    lastSwipe.endX = endX;
-    lastSwipe.endY = endY;
-    lastSwipe.moveX = moveX;
-    lastSwipe.moveY = moveY;
-    lastSwipe.deltaX = deltaX;
-    lastSwipe.deltaY = deltaY;
+    // // Update the last swipe object in the array
+    // const lastSwipe = swipes[swipes.length - 1];
+    // lastSwipe.endX = endX;
+    // lastSwipe.endY = endY;
+    // lastSwipe.moveX = moveX;
+    // lastSwipe.moveY = moveY;
+    // lastSwipe.deltaX = deltaX;
+    // lastSwipe.deltaY = deltaY;
 
     if (!isSwipingHorizontal && !isSwipingVertical) {
         // Determine the swipe direction on the first significant movement
@@ -589,7 +593,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
         moveShape(0, moveY); // Move by the difference since the last move
         startY += (moveY * sensitivity); // Adjust the start point
     }
-    if (isSwipingVertical && moveY/4 < 0) {
+    if (isSwipingVertical && moveY/3 < 0) {
         // Horizontal swipe (left or right)
         rotateShape(); // Move by the difference since the last move
         startY += (moveY * sensitivity); // Adjust the start point
