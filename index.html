@@ -477,12 +477,10 @@ document.addEventListener('keyup', (event) => {
 
 
 
-
-
-
 let startX = 0;
 let startY = 0;
-let isSwiping = false;
+let isSwipingHorizontal = false;
+let isSwipingVertical = false;
 let lastMoveX = 0;
 let lastMoveY = 0;
 
@@ -495,12 +493,12 @@ gameCanvas.addEventListener('touchstart', (event) => {
     startY = touch.pageY;
     lastMoveX = 0; // Reset movement from last swipe
     lastMoveY = 0; 
-    isSwiping = true;
+    isSwipingHorizontal = false; // Reset swipe direction
+    isSwipingVertical = false;
 });
 
 // Detect swipe move (real-time updates)
 gameCanvas.addEventListener('touchmove', (event) => {
-    if (!isSwiping) return;
     event.preventDefault(); // Prevent default touch behavior (scrolling, zooming)
 
     const touch = event.touches[0];
@@ -517,23 +515,30 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const moveX = Math.floor(deltaX / sensitivity);
     const moveY = Math.floor(deltaY / sensitivity);
 
-    // Only move the block if the movement distance is significant
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    if (!isSwipingHorizontal && !isSwipingVertical) {
+        // Determine the swipe direction on the first significant movement
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            isSwipingHorizontal = true;
+        } else {
+            isSwipingVertical = true;
+        }
+    }
+
+    if (isSwipingHorizontal) {
         // Horizontal swipe (left or right)
-        if (deltaX < 0 && lastMoveX !== moveX) {
-            // Left swipe - Move left
-            moveShape(-moveX, 0);
-            lastMoveX = moveX;
-        } else if (deltaX > 0 && lastMoveX !== moveX) {
-            // Right swipe - Move right
-            moveShape(moveX, 0);
+        if (deltaX !== 0 && lastMoveX !== moveX) {
+            moveShape(moveX, 0); 
             lastMoveX = moveX;
         }
-    } else {
+    }
+
+    if (isSwipingVertical) {
         // Vertical swipe (up or down)
         if (deltaY > 0 && lastMoveY !== moveY) {
-            // Down swipe - Move down
-            moveShape(0, moveY);
+            moveShape(0, moveY); // Move down
+            lastMoveY = moveY;
+        } else if (deltaY < 0 && lastMoveY !== moveY) {
+            rotateShape(); // Rotate on upward swipe
             lastMoveY = moveY;
         }
     }
@@ -541,10 +546,9 @@ gameCanvas.addEventListener('touchmove', (event) => {
 
 // Detect swipe end
 gameCanvas.addEventListener('touchend', (event) => {
-    if (!isSwiping) return;
-    isSwiping = false; // End the swipe tracking
+    isSwipingHorizontal = false; // Reset swipe direction
+    isSwipingVertical = false;
 });
-
 
 
 
