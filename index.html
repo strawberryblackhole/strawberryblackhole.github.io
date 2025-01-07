@@ -479,8 +479,6 @@ let startX = 0;
 let startY = 0;
 let isSwipingHorizontal = false;
 let isSwipingVertical = false;
-let lastMoveX = 0;
-let lastMoveY = 0;
 
 const gameCanvas = document.getElementById('gameCanvas');
 
@@ -489,8 +487,6 @@ gameCanvas.addEventListener('touchstart', (event) => {
     const touch = event.touches[0];
     startX = touch.pageX;
     startY = touch.pageY;
-    lastMoveX = 0; // Reset movement from last swipe
-    lastMoveY = 0; 
     isSwipingHorizontal = false; // Reset swipe direction
     isSwipingVertical = false;
 });
@@ -507,7 +503,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const deltaY = endY - startY;
 
     // Set swipe sensitivity for movement (how far should the finger move to make the block move one step)
-    const sensitivity = 20; // Adjust this value for your preferred sensitivity (higher value = less movement)
+    const sensitivity = 30; // Adjust this value for your preferred sensitivity (higher value = less movement)
 
     // Calculate how many steps to move in the x or y direction
     const moveX = Math.floor(deltaX / sensitivity);
@@ -515,29 +511,19 @@ gameCanvas.addEventListener('touchmove', (event) => {
 
     if (!isSwipingHorizontal && !isSwipingVertical) {
         // Determine the swipe direction on the first significant movement
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX > 20)) {
             isSwipingHorizontal = true;
-        } else {
+        } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY > 20)){
             isSwipingVertical = true;
         }
     }
 
-    if (isSwipingHorizontal && moveX !== lastMoveX) {
+    if (isSwipingHorizontal && moveX !== 0) {
         // Horizontal swipe (left or right)
-        moveShape(moveX - lastMoveX, 0); // Move by the difference since the last move
-        lastMoveX = moveX;
+        moveShape(moveX, 0); // Move by the difference since the last move
         startX += (moveX * sensitivity); // Adjust the start point
     }
 
-    if (isSwipingVertical && moveY !== lastMoveY) {
-        if (moveY > lastMoveY) {
-            moveShape(0, moveY - lastMoveY); // Move down
-        } else if (moveY < lastMoveY) {
-            rotateShape(); // Rotate on upward swipe
-        }
-        lastMoveY = moveY;
-        startY += (moveY * sensitivity); // Adjust the start point
-    }
 });
 
 // Detect swipe end
