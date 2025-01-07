@@ -508,42 +508,27 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const deltaX = endX - startX;
     const deltaY = endY - startY;
 
-    // Set swipe sensitivity for movement (how far should the finger move to make the block move one step)
     const sensitivity = 20; // Adjust this value for your preferred sensitivity (higher value = less movement)
 
-    // Calculate how many steps to move in the x or y direction
     const moveX = Math.floor(deltaX / sensitivity);
     const moveY = Math.floor(deltaY / sensitivity);
 
-    
-    // Move the shape only if there's a step to move
-    if (moveX !== 0) {
-        moveShape(moveX, 0);
-        startX += moveX * sensitivity; // Update the starting X position
-    }
-
-    if (moveY !== 0) {
-        moveShape(0, moveY);
-        startY += moveY * sensitivity; // Update the starting Y position
-    }
-
-
     // Horizontal swipe (left or right)
-    if (deltaX < 0) {
-        // Left swipe - Move left
+    if (moveX < 0) {
         moveShape(moveX, 0);
-    } else if (deltaX > 0 ) {
-        // Right swipe - Move right
+        startX += moveX * sensitivity;
+    } else if (moveX > 0 ) {
         moveShape(moveX, 0);
+        startX += moveX * sensitivity;
     }
-    // Vertical swipe (up or down)
-    if (deltaY > 0) {
-        // Down swipe - Move down
+    if (moveY > 0) {
         moveShape(0, moveY);
-    } else if(deltaY < 0){
+        startY += moveY * sensitivity;
+    } else if(moveY < 0){
       for (let i = 0; i < moveY; i++) {
         rotateShape();
       } 
+      startY += moveY * sensitivity;
     }
     
 });
