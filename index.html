@@ -513,7 +513,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const moveX = Math.floor(deltaX / sensitivity);
     const moveY = Math.floor(deltaY / sensitivity);
 
-    if(moveX > moveY){
+    if(deltaX > deltaY){
       // Horizontal swipe (left or right)
       if (moveX < 0) {
           moveShape(moveX, 0);
