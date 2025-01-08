@@ -585,8 +585,8 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const sensitivity = 30; // Adjust this value for your preferred sensitivity (higher value = less movement)
 
     // Calculate how many steps to move in the x or y direction
-    const moveX = Math.floor(deltaX / sensitivity);
-    const moveY = Math.floor(deltaY / sensitivity);
+    const moveX = Math.sign(deltaX) * Math.floor(Math.abs(deltaX) / sensitivity);
+    const moveY = Math.sign(deltaY) * Math.floor(Math.abs(deltaY) / sensitivity);
 
     // // Update the last swipe object in the array
     // const lastSwipe = swipes[swipes.length - 1];
