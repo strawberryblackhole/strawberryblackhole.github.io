@@ -154,6 +154,7 @@ let spawnDelay = 0;
 let gameOver = false;
 let shapeLocked = false;
 let particles = [];
+let lastTimeStamp = 0;
 
 function drawGrid() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -231,8 +232,8 @@ function spawnShape() {
 }
 
 function moveShape(dx, dy) {
-  if(shapeLocked) return;
-  if (gameOver) return;
+  if(shapeLocked) return false;
+  if (gameOver) return false;
   currentShape.col += dx;
   currentShape.row += dy;
   if (collision()) {
@@ -243,6 +244,7 @@ function moveShape(dx, dy) {
       spawnDelay = dropInterval;
     }
   }
+  return true;
 }
 
 function rotateShape() {
@@ -275,6 +277,7 @@ function lockShape() {
       }
     });
   });
+  createLockParticles();
   clearLines();
 }
 
@@ -298,7 +301,9 @@ function clearLines() {
   if (linesCleared > 0) {
     if (score % 500 === 0) {
       level++;
-      dropInterval = Math.max(100, dropInterval - 100);
+      if(level < 8){
+        dropInterval *=0.9;
+      } else dropInterval *= 0.95;
     }
   }
   
@@ -320,11 +325,29 @@ function createClearParticles(row) {
   }
 }
 
+function createLockParticles() {
+  currentShape.shape.forEach((row, yy) => {
+    row.forEach((cell, xx) => {
+      if (cell) {
+        particles.push({
+        x: (xx + currentShape.col) * BLOCK_SIZE,
+        y: (yy + currentShape.row) * BLOCK_SIZE,
+        size: BLOCK_SIZE / 2,
+        color: currentShape.color,
+        opacity: 1.5,
+        dx: (Math.random() - 0.5) * 8,
+        dy: (Math.random() - 0.2) * 4
+      });
+      }
+    });
+  });
+}
+
 function updateParticles() {
   particles.forEach((particle, index) => {
     particle.x += particle.dx;
     particle.y += particle.dy;
-    particle.opacity *= 0.97;
+    particle.opacity *= 0.98;
     particle.opacity -= 0.01;
     if (particle.opacity <= 0) {
       particles.splice(index, 1);
@@ -352,7 +375,6 @@ function updateScore() {
 }
 
 const keysPressed = {};
-const keysPressedTouch = {};
 const keyLastAction = {};
 const KEY_DELAYS = {
     ArrowLeft: 100, // Delay in milliseconds for left movement
@@ -369,7 +391,9 @@ const KEY_DELAYS_TOUCH = {
 };
 
 document.addEventListener('keydown', (event) => {
+    if(keysPressed[event.key]) return;
     keysPressed[event.key] = true;
+    keyLastAction[event.key] = 0;
 });
 
 document.addEventListener('keyup', (event) => {
@@ -383,19 +407,9 @@ function handleKeyPress(timestamp) {
             if (!keyLastAction[key] || timestamp - keyLastAction[key] >= (KEY_DELAYS[key] || 0)) {
                 if (key === 'ArrowLeft') moveShape(-1, 0);
                 if (key === 'ArrowRight') moveShape(1, 0);
-                if (key === 'ArrowDown') moveShape(0, 1);
-                if (key === 'ArrowUp') rotateShape();
-
-                // Update the last action time for the key
-                keyLastAction[key] = timestamp;
-            }
-        }
-        if (keysPressedTouch[key]) {
-            // Check if the key has a delay defined and enough time has passed
-            if (!keyLastAction[key] || timestamp - keyLastAction[key] >= (KEY_DELAYS_TOUCH[key] || 0)) {
-                if (key === 'ArrowLeft') moveShape(-1, 0);
-                if (key === 'ArrowRight') moveShape(1, 0);
-                if (key === 'ArrowDown') moveShape(0, 1);
+                if (key === 'ArrowDown'){
+                  if(moveShape(0, 1)) lastDropTime = lastTimeStamp;
+                }
                 if (key === 'ArrowUp') rotateShape();
 
                 // Update the last action time for the key
@@ -405,7 +419,22 @@ function handleKeyPress(timestamp) {
     });
 }
 
+function drawLoadingBars(deltaTime) {
+  const barHeight = 5; // Height of the bars
+  const spawnProgress = Math.min(spawnDelay > 0 ? (deltaTime / spawnDelay) : 1, 1); // Normalize between 0 and 1
+  const dropProgress = Math.min(deltaTime / dropInterval, 1); // Normalize between 0 and 1
+
+  // Draw the spawnDelay bar
+  ctx.fillStyle = 'blue';
+  ctx.fillRect(0, 0, canvas.width * spawnProgress, barHeight);
+
+  // Draw the dropInterval bar
+  ctx.fillStyle = 'green';
+  ctx.fillRect(0, barHeight + 2, canvas.width * dropProgress, barHeight);
+}
+
 function gameLoop(timestamp) {
+  lastTimeStamp = timestamp;
   if (gameOver) return;
   if (!lastDropTime) lastDropTime = timestamp;
   const deltaTime = timestamp - lastDropTime;
@@ -413,15 +442,17 @@ function gameLoop(timestamp) {
     if (spawnDelay - deltaTime <= 0){
       spawnShape();
       spawnDelay = 0;
+      lastDropTime = timestamp;
     }
   } else if (deltaTime > dropInterval) {
     moveShape(0, 1);
     lastDropTime = timestamp;
   }
-  handleKeyPress(timestamp); // Process active keys with delay
+  handleKeyPress(timestamp);
   drawGrid();
   drawGhost();
   drawShape();
+  drawLoadingBars(deltaTime); 
   updateParticles();
   // drawSwipes();
   updateScore();
@@ -429,6 +460,9 @@ function gameLoop(timestamp) {
 }
 
 restartButton.addEventListener('click', resetGame);
+
+
+// setupButtonListeners();
 
 // Handle button clicks
 function setupButtonListeners() {
@@ -469,16 +503,6 @@ function setupButtonListeners() {
     });
 }
 
-// setupButtonListeners();
-
-
-document.addEventListener('keydown', (event) => {
-    keysPressed[event.key] = true;
-});
-
-document.addEventListener('keyup', (event) => {
-    keysPressed[event.key] = false;
-});
 
 
 const swipes = []; // Array to store all swipe objects
@@ -575,9 +599,9 @@ gameCanvas.addEventListener('touchmove', (event) => {
 
     if (!isSwipingHorizontal && !isSwipingVertical) {
         // Determine the swipe direction on the first significant movement
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > sensitivity) {
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > sensitivity*0.9) {
             isSwipingHorizontal = true;
-        } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY) > sensitivity){
+        } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY) > sensitivity*0.9){
             isSwipingVertical = true;
         }
     }
@@ -590,7 +614,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
 
     if (isSwipingVertical && moveY > 0) {
         // Horizontal swipe (left or right)
-        moveShape(0, moveY); // Move by the difference since the last move
+        if(moveShape(0, moveY)) lastDropTime = lastTimeStamp;
         startY += (moveY * sensitivity); // Adjust the start point
     }
     if (isSwipingVertical && moveY/3 < 0) {
