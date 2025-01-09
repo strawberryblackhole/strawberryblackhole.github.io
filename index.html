@@ -44,7 +44,7 @@ canvas {
   border-radius: 8px;
   cursor: pointer;
   aspect-ratio: 1 / 1;
-  width: 100%;
+  width: 50%;
   user-select: none; 
 }
 #score {
@@ -77,25 +77,19 @@ canvas {
   }
   #preview-container {
     display: flex;
-    flex-direction: column-reverse; /* Changes the order so the button is above the canvas */
+    flex-direction: row;
     align-items: center;
+    margin-left: 10px;
+    width: calc((100% / 10) * 4*2); 
+  }
+  #previewCanvas, #secondPreviewCanvas {
     margin-bottom: 10px;
-    margin-left: 0;
+    margin-left: 10px;
+    margin-right: 10px;
   }
   /* #controls {
     width: 90%;
   } */
-  #restart {
-    margin-bottom: 10px; /* Adds space between the button and the canvas */
-    height: 50px;
-  }
-}
-
-@media (max-height: 800px) {
-  #game-container {
-    transform: scale(calc(100vh / 800));
-    transform-origin: top;
-  }
 }
 </style>
 </head>
@@ -107,9 +101,10 @@ canvas {
 <div id="score">Score: 0 | Level: 1</div>
 <div id="game-over-message">Game Over</div>
 <div id="game-container">
-    <div id="preview-container">
-      <canvas id="previewCanvas" width="120" height="60"></canvas>
-      <button id="restart">Restart</button>
+  <div id="preview-container">
+    <canvas id="previewCanvas" width="120" height="60"></canvas>
+    <canvas id="secondPreviewCanvas" width="120" height="60"></canvas>
+    <button id="restart">Restart</button>
   </div>
   <canvas id="gameCanvas" width="300" height="600"></canvas>
 </div>
@@ -127,6 +122,7 @@ const canvas = document.getElementById('gameCanvas');
 const previewCanvas = document.getElementById('previewCanvas');
 const ctx = canvas.getContext('2d');
 const previewCtx = previewCanvas.getContext('2d');
+const secondPreviewCtx = secondPreviewCanvas.getContext('2d');
 const scoreDisplay = document.getElementById('score');
 const gameOverMessage = document.getElementById('game-over-message');
 const restartButton = document.getElementById('restart');
@@ -136,16 +132,75 @@ const BLOCK_SIZE = canvas.width / COLS;
 const PREVIEW_BLOCK_SIZE = previewCanvas.width / 4;
 let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
 const shapes = [
-  { shape: [[1, 1, 1], [0, 1, 0]], color: 'yellow' },
-  { shape: [[1, 1], [1, 1]], color: 'cyan' },
-  { shape: [[0, 1, 1], [1, 1, 0]], color: 'orange' },
-  { shape: [[1, 1, 0], [0, 1, 1]], color: 'green' },
-  { shape: [[1, 1, 1, 1]], color: 'blue' },
-  { shape: [[1, 1, 1], [1, 0, 0]], color: 'purple' },
-  { shape: [[1, 1, 1], [0, 0, 1]], color: 'red' }
+  {
+    type: "L",
+    shape: [
+      [0, 0, 1],
+      [1, 1, 1],
+      [0, 0, 0],
+    ],
+    color: "yellow",
+  },
+  {
+    type: "J",
+    shape: [
+      [1, 0, 0],
+      [1, 1, 1],
+      [0, 0, 0],
+    ],
+    color: "cyan",
+  },
+  {
+    type: "T",
+    shape: [
+      [0, 1, 0],
+      [1, 1, 1],
+      [0, 0, 0],
+    ],
+    color: "orange",
+  },
+  {
+    type: "Z",
+    shape: [
+      [1, 1, 0],
+      [0, 1, 1],
+      [0, 0, 0],
+    ],
+    color: "green",
+  },
+  {
+    type: "S",
+    shape: [
+      [0, 1, 1],
+      [1, 1, 0],
+      [0, 0, 0],
+    ],
+    color: "blue",
+  },
+  {
+    type: "I",
+    shape: [
+      [0, 0, 0, 0],
+      [1, 1, 1, 1],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+    color: "purple",
+  },
+  {
+    type: "O",
+    shape: [
+      [1, 1],
+      [1, 1],
+    ],
+    color: "red",
+  },
 ];
+
+
 let currentShape = { shape: [], row: 0, col: 4, color: '' };
 let nextShape = {};
+let secondNextShape = {};
 let score = 0;
 let level = 1;
 let dropInterval = 1000;
@@ -176,16 +231,19 @@ function drawGrid() {
   });
 }
 
-function drawShape(opacity = 1) {
+function drawShape(opacity = 1, fill = false) {
   if(shapeLocked) return;
-  ctx.globalAlpha = opacity;
-  ctx.fillStyle = currentShape.color;
   currentShape.shape.forEach((row, y) => {
     row.forEach((cell, x) => {
       if (cell) {
+        ctx.globalAlpha = opacity;
+        ctx.fillStyle = currentShape.color;
         ctx.fillRect((currentShape.col + x) * BLOCK_SIZE, (currentShape.row + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
         ctx.strokeStyle = 'black';
         ctx.strokeRect((currentShape.col + x) * BLOCK_SIZE, (currentShape.row + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+        if(fill){
+          ctx.clearRect((currentShape.col + x) * BLOCK_SIZE + 3, (currentShape.row + y) * BLOCK_SIZE + 3, BLOCK_SIZE - 6, BLOCK_SIZE - 6);
+        }
       }
     });
   });
@@ -199,19 +257,19 @@ function drawGhost() {
     currentShape.row++;
   }
   currentShape.row--;
-  drawShape(0.6);
+  drawShape(0.6, true);
   currentShape.row = originalRow;
 }
 
-function drawPreview() {
-  previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-  previewCtx.fillStyle = nextShape.color;
-  nextShape.shape.forEach((row, y) => {
+function drawPreview(ctx, shape) {
+  ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+  ctx.fillStyle = shape.color;
+  shape.shape.forEach((row, y) => {
     row.forEach((cell, x) => {
       if (cell) {
-        previewCtx.fillRect(x * PREVIEW_BLOCK_SIZE, y * PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE);
-        previewCtx.strokeStyle = 'black';
-        previewCtx.strokeRect(x * PREVIEW_BLOCK_SIZE, y * PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE);
+        ctx.fillRect(x * PREVIEW_BLOCK_SIZE, y * PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE);
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(x * PREVIEW_BLOCK_SIZE, y * PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE);
       }
     });
   });
@@ -220,8 +278,10 @@ function drawPreview() {
 function spawnShape() {
   if (gameOver) return;
   currentShape = { ...nextShape, row: 0, col: Math.floor(COLS / 2) - Math.floor(nextShape.shape[0].length / 2) };
-  nextShape = shapes[Math.floor(Math.random() * shapes.length)];
-  drawPreview();
+  nextShape = { ...secondNextShape };
+  secondNextShape = shapes[Math.floor(Math.random() * shapes.length)];
+  drawPreview(previewCtx, nextShape);
+  drawPreview(secondPreviewCtx, secondNextShape);
   if (collision()) {
     gameOver = true;
     gameOverMessage.style.display = 'block';
@@ -249,12 +309,51 @@ function moveShape(dx, dy) {
 
 function rotateShape() {
   if (gameOver) return;
-  const originalShape = currentShape.shape.map(row => [...row]);
-  currentShape.shape = currentShape.shape[0].map((val, index) => currentShape.shape.map(row => row[index]).reverse());
-  if (collision()) {
-    currentShape.shape = originalShape;
+
+  const { shape, type } = currentShape;
+  const originalShape = shape.map(row => [...row]);
+
+    // Rotate to the right (clockwise)
+  const n = shape.length; // Assuming square grid
+  const rotated = Array.from({ length: n }, () => Array(n).fill(0));
+
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      rotated[x][n - 1 - y] = shape[y][x];
+    }
   }
+  currentShape.shape = rotated;
+  // Check for collision
+// Check for collision
+if (collision()) {
+    // Try moving one step to the right
+    currentShape.col++;
+    if (collision()) {
+      // Try moving one step to the left
+      currentShape.col -= 2;
+      if (collision()) {
+        // Special case for I piece: try two steps to the left and right
+        if (type === "I") {
+          currentShape.col += 3; // Two to the right from original
+          if (collision()) {
+            currentShape.col -= 4; // Two to the left from original
+            if (collision()) {
+              // Revert to the original position and shape
+              currentShape.col += 2;
+              currentShape.shape = originalShape;
+            }
+          }
+        } else {
+          // Revert to the original position and shape for non-I pieces
+          currentShape.col++;
+          currentShape.shape = originalShape;
+        }
+      }
+    }
+  }
+  
 }
+
 
 function collision() {
   for (let y = 0; y < currentShape.shape.length; y++) {
@@ -364,6 +463,7 @@ function resetGame() {
   level = 1;
   dropInterval = 1000;
   nextShape = shapes[Math.floor(Math.random() * shapes.length)];
+  secondNextShape = shapes[Math.floor(Math.random() * shapes.length)];
   spawnShape();
   lastDropTime = 0;
   particles = [];
