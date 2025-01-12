@@ -740,7 +740,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
             lastSwipe.horizontal = true;
         } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY) > sensitivity*0.7){
             isSwipingVertical = true;
-            if (moveY < 0) {
+            if (deltaY < 0) {
                 lastSwipe.vertical = true;
                 rotateShape(); 
             }
