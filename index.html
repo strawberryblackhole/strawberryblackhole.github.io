@@ -552,7 +552,7 @@ function gameLoop(timestamp) {
   drawGrid();
   drawGhost();
   drawShape();
-  drawLoadingBars(deltaTime); 
+  //drawLoadingBars(deltaTime); 
   updateParticles();
   // drawSwipes();
   updateScore();
@@ -703,24 +703,20 @@ gameCanvas.addEventListener('touchmove', (event) => {
             isSwipingHorizontal = true;
         } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY) > sensitivity*0.9){
             isSwipingVertical = true;
+            if (moveY < 0) {
+                rotateShape(); 
+            }
         }
     }
 
     if (isSwipingHorizontal && moveX !== 0) {
-        // Horizontal swipe (left or right)
-        moveShape(moveX, 0); // Move by the difference since the last move
-        startX += (moveX * sensitivity); // Adjust the start point
+        moveShape(moveX, 0); 
+        startX += (moveX * sensitivity);
     }
 
     if (isSwipingVertical && moveY > 0) {
-        // Horizontal swipe (left or right)
         if(moveShape(0, moveY)) lastDropTime = lastTimeStamp;
-        startY += (moveY * sensitivity); // Adjust the start point
-    }
-    if (isSwipingVertical && moveY/3 < 0) {
-        // Horizontal swipe (left or right)
-        rotateShape(); // Move by the difference since the last move
-        startY += (moveY * sensitivity); // Adjust the start point
+        startY += (moveY * sensitivity); 
     }
 
 });
