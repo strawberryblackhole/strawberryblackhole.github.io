@@ -637,7 +637,7 @@ const swipes = []; // Array to store all swipe objects
 // Function to draw all stored swipes on the canvas
 function drawSwipes() {
 
-    swipes.forEach(swipe => {
+    swipes.slice(-10).forEach(swipe => {
         // Draw swipe line
         ctx.strokeStyle = 'red';
         ctx.lineWidth = 2;
@@ -648,7 +648,7 @@ function drawSwipes() {
 
         // Draw text for swipe components
         ctx.fillStyle = 'blue';
-        if(swipe.horizontal) ctx.fillStyle = 'red';
+        if(swipe.vertical) ctx.fillStyle = 'red';
         ctx.font = '16px Arial';
         ctx.fillText(`ΔX: ${swipe.deltaX}`, swipe.endX + 10, swipe.endY - 10);
         ctx.fillText(`ΔY: ${swipe.deltaY}`, swipe.endX + 10, swipe.endY + 10);
@@ -730,6 +730,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
             isSwipingHorizontal = true;
         } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY) > sensitivity*0.7){
             isSwipingVertical = true;
+            lastSwipe.vertical = true;
             if (moveY < 0) {
                 rotateShape(); 
             }
