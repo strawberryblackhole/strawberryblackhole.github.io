@@ -81,10 +81,12 @@ canvas {
     align-items: center;
     width: calc((100% / 10) * 4*2); 
   }
-  #previewCanvas, #secondPreviewCanvas {
+  #previewCanvas {
     margin-bottom: 10px;
-    margin-left: 10px;
     margin-right: 10px;
+  }
+  #secondPreviewCanvas {
+    margin-bottom: 10px;
   }
   /* #controls {
     width: 90%;
@@ -730,8 +732,8 @@ gameCanvas.addEventListener('touchmove', (event) => {
             isSwipingHorizontal = true;
         } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY) > sensitivity*0.7){
             isSwipingVertical = true;
-            lastSwipe.vertical = true;
             if (moveY < 0) {
+                lastSwipe.vertical = true;
                 rotateShape(); 
             }
         }
