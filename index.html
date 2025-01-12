@@ -79,7 +79,6 @@ canvas {
     display: flex;
     flex-direction: row;
     align-items: center;
-    margin-left: 10px;
     width: calc((100% / 10) * 4*2); 
   }
   #previewCanvas, #secondPreviewCanvas {
@@ -582,7 +581,7 @@ function gameLoop(timestamp) {
   drawShape();
   //drawLoadingBars(deltaTime); 
   updateParticles();
-  // drawSwipes();
+  drawSwipes();
   updateScore();
   requestAnimationFrame(gameLoop);
 }
@@ -685,17 +684,17 @@ gameCanvas.addEventListener('touchstart', (event) => {
     isSwipingHorizontal = false; // Reset swipe direction
     isSwipingVertical = false;
 
-    // swipes.push({
-    //     startX,
-    //     startY,
-    //     endX: startX,
-    //     endY: startY,
-    //     moveX: 0,
-    //     moveY: 0,
-    //     deltaX: 0,
-    //     deltaY: 0,
-    //     horizontal:false,
-    // });
+    swipes.push({
+        startX,
+        startY,
+        endX: startX,
+        endY: startY,
+        moveX: 0,
+        moveY: 0,
+        deltaX: 0,
+        deltaY: 0,
+        horizontal:false,
+    });
 });
 
 // Detect swipe move (real-time updates)
@@ -716,20 +715,20 @@ gameCanvas.addEventListener('touchmove', (event) => {
     const moveX = Math.sign(deltaX) * Math.floor(Math.abs(deltaX) / sensitivity);
     const moveY = Math.sign(deltaY) * Math.floor(Math.abs(deltaY) / sensitivity);
 
-    // // Update the last swipe object in the array
-    // const lastSwipe = swipes[swipes.length - 1];
-    // lastSwipe.endX = endX;
-    // lastSwipe.endY = endY;
-    // lastSwipe.moveX = moveX;
-    // lastSwipe.moveY = moveY;
-    // lastSwipe.deltaX = deltaX;
-    // lastSwipe.deltaY = deltaY;
+    // Update the last swipe object in the array
+    const lastSwipe = swipes[swipes.length - 1];
+    lastSwipe.endX = endX;
+    lastSwipe.endY = endY;
+    lastSwipe.moveX = moveX;
+    lastSwipe.moveY = moveY;
+    lastSwipe.deltaX = deltaX;
+    lastSwipe.deltaY = deltaY;
 
     if (!isSwipingHorizontal && !isSwipingVertical) {
         // Determine the swipe direction on the first significant movement
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > sensitivity*0.9) {
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > sensitivity*0.7) {
             isSwipingHorizontal = true;
-        } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY) > sensitivity*0.9){
+        } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY) > sensitivity*0.7){
             isSwipingVertical = true;
             if (moveY < 0) {
                 rotateShape(); 
