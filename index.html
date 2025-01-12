@@ -96,7 +96,6 @@ canvas {
 <body>
 <h1>Tetris Game</h1>
 
-<iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/4LrISEpfFRdRS2bZkQ1CuO?utm_source=generator" width="300" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
 
 <div id="score">Score: 0 | Level: 1</div>
 <div id="game-over-message">Game Over</div>
@@ -106,7 +105,7 @@ canvas {
     <canvas id="secondPreviewCanvas" width="120" height="60"></canvas>
     <button id="restart">Restart</button>
   </div>
-  <canvas id="gameCanvas" width="300" height="600"></canvas>
+  <canvas id="gameCanvas" width="297" height="540"></canvas>
 </div>
 <!--
 <div id="controls">
@@ -126,7 +125,7 @@ const secondPreviewCtx = secondPreviewCanvas.getContext('2d');
 const scoreDisplay = document.getElementById('score');
 const gameOverMessage = document.getElementById('game-over-message');
 const restartButton = document.getElementById('restart');
-const COLS = 10;
+const COLS = 11;
 const ROWS = 20;
 const BLOCK_SIZE = canvas.width / COLS;
 const PREVIEW_BLOCK_SIZE = previewCanvas.width / 4;
@@ -401,8 +400,8 @@ function clearLines() {
     if (score % 500 === 0) {
       level++;
       if(level < 8){
-        dropInterval *=0.9;
-      } else dropInterval *= 0.95;
+        dropInterval *=0.85;
+      } else dropInterval *= 0.90;
     }
   }
   
