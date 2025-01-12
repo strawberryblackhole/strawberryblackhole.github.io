@@ -324,20 +324,25 @@ function rotateShape() {
   currentShape.shape = rotated;
   // Check for collision
 // Check for collision
-if (collision()) {
-    // Try moving one step to the right
+
+if (outOfBounds()) { //wall bounce
     currentShape.col++;
-    if (collision()) {
-      // Try moving one step to the left
+    if(!collision()) return;
+
+    if (outOfBounds()) {
       currentShape.col -= 2;
-      if (collision()) {
-        // Special case for I piece: try two steps to the left and right
+      if(!collision()) return;
+
+      if (outOfBounds()) {
         if (type === "I") {
-          currentShape.col += 3; // Two to the right from original
-          if (collision()) {
-            currentShape.col -= 4; // Two to the left from original
-            if (collision()) {
-              // Revert to the original position and shape
+          currentShape.col += 3;
+          if(!collision()) return;
+
+          if (outOfBounds()) {
+            currentShape.col -= 4;
+            if(!collision()) return;
+
+            if (outOfBounds()) {
               currentShape.col += 2;
               currentShape.shape = originalShape;
             }
@@ -350,19 +355,43 @@ if (collision()) {
       }
     }
   }
-  
+  if(collision()) currentShape.shape = originalShape;
+
 }
 
 
-function collision() {
+function blockToBlockCollision() {
   for (let y = 0; y < currentShape.shape.length; y++) {
     for (let x = 0; x < currentShape.shape[y].length; x++) {
-      if (currentShape.shape[y][x] && (grid[currentShape.row + y] === undefined || grid[currentShape.row + y][currentShape.col + x] === undefined || grid[currentShape.row + y][currentShape.col + x])) {
+      if (
+        currentShape.shape[y][x] &&
+        grid[currentShape.row + y] !== undefined &&
+        grid[currentShape.row + y][currentShape.col + x]
+      ) {
         return true;
       }
     }
   }
   return false;
+}
+
+function outOfBounds() {
+  for (let y = 0; y < currentShape.shape.length; y++) {
+    for (let x = 0; x < currentShape.shape[y].length; x++) {
+      if (
+        currentShape.shape[y][x] &&
+        (grid[currentShape.row + y] === undefined ||
+          grid[currentShape.row + y][currentShape.col + x] === undefined)
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function collision() {
+  return blockToBlockCollision() || outOfBounds();
 }
 
 function lockShape() {
