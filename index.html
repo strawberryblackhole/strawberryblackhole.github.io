@@ -43,9 +43,12 @@ canvas {
   color: #fff;
   border-radius: 8px;
   cursor: pointer;
-  aspect-ratio: 1 / 1;
-  width: 50%;
+  aspect-ratio: 2 / 1;
+  width: 100px;
   user-select: none; 
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-bottom: 10px;
 }
 #score {
   font-size: 20px;
@@ -55,7 +58,7 @@ canvas {
   align-items: center;
   margin-bottom: 10px;
   margin-left: 10px; 
-  width: calc((100% / 10) * 4); 
+  width: 120px; 
 }
 #game-over-message {
   order: 0;
@@ -88,6 +91,9 @@ canvas {
   #secondPreviewCanvas {
     margin-bottom: 10px;
   }
+  #restart{
+    width: 50%;  
+  }
   /* #controls {
     width: 90%;
   } */
@@ -100,11 +106,11 @@ canvas {
 
 <div id="score">Score: 0 | Level: 1</div>
 <div id="game-over-message">Game Over</div>
+<button id="restart">Restart</button>
 <div id="game-container">
   <div id="preview-container">
     <canvas id="previewCanvas" width="120" height="60"></canvas>
     <canvas id="secondPreviewCanvas" width="120" height="60"></canvas>
-    <button id="restart">Restart</button>
   </div>
   <canvas id="gameCanvas" width="297" height="540"></canvas>
 </div>
@@ -267,9 +273,9 @@ function drawPreview(ctx, shape) {
   shape.shape.forEach((row, y) => {
     row.forEach((cell, x) => {
       if (cell) {
-        ctx.fillRect(x * PREVIEW_BLOCK_SIZE, y * PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE);
+        ctx.fillRect(x * PREVIEW_BLOCK_SIZE, (y - (shape.type==="I")) * PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE);
         ctx.strokeStyle = 'black';
-        ctx.strokeRect(x * PREVIEW_BLOCK_SIZE, y * PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE);
+        ctx.strokeRect(x * PREVIEW_BLOCK_SIZE, (y - (shape.type==="I")) * PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE, PREVIEW_BLOCK_SIZE);
       }
     });
   });
@@ -277,7 +283,7 @@ function drawPreview(ctx, shape) {
 
 function spawnShape() {
   if (gameOver) return;
-  currentShape = { ...nextShape, row: 0, col: Math.floor(COLS / 2) - Math.floor(nextShape.shape[0].length / 2) };
+  currentShape = { ...nextShape, row: 0 - (nextShape.type==="I"), col: Math.floor(COLS / 2) - Math.floor(nextShape.shape[0].length / 2) };
   nextShape = { ...secondNextShape };
   secondNextShape = shapes[Math.floor(Math.random() * shapes.length)];
   drawPreview(previewCtx, nextShape);
@@ -651,6 +657,7 @@ function drawSwipes() {
         // Draw text for swipe components
         ctx.fillStyle = 'blue';
         if(swipe.vertical) ctx.fillStyle = 'red';
+        if(swipe.vertical) ctx.fillStyle = 'green';
         ctx.font = '16px Arial';
         ctx.fillText(`ΔX: ${swipe.deltaX}`, swipe.endX + 10, swipe.endY - 10);
         ctx.fillText(`ΔY: ${swipe.deltaY}`, swipe.endX + 10, swipe.endY + 10);
@@ -730,6 +737,7 @@ gameCanvas.addEventListener('touchmove', (event) => {
         // Determine the swipe direction on the first significant movement
         if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > sensitivity*0.7) {
             isSwipingHorizontal = true;
+            lastSwipe.horizontal = true;
         } else if(Math.abs(deltaX) < Math.abs(deltaY) && Math.abs(deltaY) > sensitivity*0.7){
             isSwipingVertical = true;
             if (moveY < 0) {
